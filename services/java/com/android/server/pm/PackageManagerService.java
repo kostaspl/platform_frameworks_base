@@ -2242,10 +2242,12 @@ public class PackageManagerService extends IPackageManager.Stub {
                 throw new SecurityException("Package " + packageName
                         + " has not requested permission " + permissionName);
             }
+            /*
             if ((bp.protectionLevel&PermissionInfo.PROTECTION_FLAG_DEVELOPMENT) == 0) {
                 throw new SecurityException("Permission " + permissionName
                         + " is not a development permission");
             }
+            */
             final PackageSetting ps = (PackageSetting) pkg.mExtras;
             if (ps == null) {
                 return;
@@ -2278,10 +2280,12 @@ public class PackageManagerService extends IPackageManager.Stub {
                 throw new SecurityException("Package " + packageName
                         + " has not requested permission " + permissionName);
             }
+            /*
             if ((bp.protectionLevel&PermissionInfo.PROTECTION_FLAG_DEVELOPMENT) == 0) {
                 throw new SecurityException("Permission " + permissionName
                         + " is not a development permission");
             }
+            */
             final PackageSetting ps = (PackageSetting) pkg.mExtras;
             if (ps == null) {
                 return;

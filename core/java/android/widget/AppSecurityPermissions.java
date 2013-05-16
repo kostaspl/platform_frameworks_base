@@ -20,6 +20,7 @@ import com.android.internal.R;
 
 import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
@@ -80,6 +81,7 @@ public class AppSecurityPermissions {
     private CharSequence mNewPermPrefix;
     private Drawable mNormalIcon;
     private Drawable mDangerousIcon;
+    private String mPackageName = null;
 
     static class MyPermissionGroupInfo extends PermissionGroupInfo {
         CharSequence mLabel;
@@ -151,11 +153,28 @@ public class AppSecurityPermissions {
         MyPermissionGroupInfo mGroup;
         MyPermissionInfo mPerm;
         AlertDialog mDialog;
+        String mPackageName = null;
 
         public PermissionItemView(Context context, AttributeSet attrs) {
             super(context, attrs);
             setClickable(true);
         }
+        
+        /* */
+        public void setPrefix(CharSequence prefix){
+        	SpannableStringBuilder builder = new SpannableStringBuilder();
+            Parcel parcel = Parcel.obtain();
+            TextUtils.writeToParcel(prefix, parcel, 0);
+            parcel.setDataPosition(0);
+            CharSequence newStr = TextUtils.CHAR_SEQUENCE_CREATOR.createFromParcel(parcel);
+            parcel.recycle();
+            builder.append(newStr);
+            builder.append(mPerm.mLabel);
+            
+            TextView permNameView = (TextView) findViewById(R.id.perm_name);
+            permNameView.setText(builder);
+        }
+        /* */
 
         public void setPermission(MyPermissionGroupInfo grp, MyPermissionInfo perm,
                 boolean first, CharSequence newPermPrefix) {
@@ -197,6 +216,9 @@ public class AppSecurityPermissions {
                 if (mDialog != null) {
                     mDialog.dismiss();
                 }
+                if (mPackageName == null){
+                	mPackageName = (String)((LinearLayout)getParent()).getTag();
+                }
                 PackageManager pm = getContext().getPackageManager();
                 AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
                 builder.setTitle(mGroup.mLabel);
@@ -216,6 +238,24 @@ public class AppSecurityPermissions {
                     sbuilder.append("\n\n");
                     sbuilder.append(mPerm.name);
                     builder.setMessage(sbuilder.toString());
+                }
+                if (pm.checkPermission(mPerm.name, mPackageName) == PackageManager.PERMISSION_DENIED){
+                	builder.setPositiveButton("Enable permission", new DialogInterface.OnClickListener() {
+    					
+    					@Override
+    					public void onClick(DialogInterface dialog, int which) {
+    						getContext().getPackageManager().grantPermission(mPackageName, mPerm.name);
+    					}
+    				});
+                } else {
+                	builder.setPositiveButton("Mute permission", new DialogInterface.OnClickListener() {
+    					
+    					@Override
+    					public void onClick(DialogInterface dialog, int which) {
+    						getContext().getPackageManager().revokePermission(mPackageName, mPerm.name);
+    						setPrefix(getContext().getString(com.android.internal.R.string.perms_new_perm_prefix));
+    					}
+    				});
                 }
                 builder.setCancelable(true);
                 builder.setIcon(mGroup.loadGroupIcon(pm));
@@ -248,6 +288,7 @@ public class AppSecurityPermissions {
     public AppSecurityPermissions(Context context, String packageName) {
         mContext = context;
         mPm = mContext.getPackageManager();
+        mPackageName = packageName;
         loadResources();
         mPermComparator = new PermissionInfoComparator();
         mPermGroupComparator = new PermissionGroupInfoComparator();
@@ -373,9 +414,11 @@ public class AppSecurityPermissions {
             // If we are only looking at an existing app, then we only
             // care about permissions that have actually been granted to it.
             if (installedPkgInfo != null && info == installedPkgInfo) {
+            	/* Do not hide muted permissions from Settings!
                 if ((flagsList[i]&PackageInfo.REQUESTED_PERMISSION_GRANTED) == 0) {
                     continue;
                 }
+                */
             }
             try {
                 PermissionInfo tmpPermInfo = mPm.getPermissionInfo(permName, 0);
@@ -475,6 +518,9 @@ public class AppSecurityPermissions {
 
         LinearLayout permsView = (LinearLayout) mInflater.inflate(R.layout.app_perms_summary, null);
         LinearLayout displayList = (LinearLayout) permsView.findViewById(R.id.perms_list);
+        if (mPackageName != null){
+        	displayList.setTag(mPackageName);
+        }
         View noPermsView = permsView.findViewById(R.id.no_permissions);
 
         displayPermissions(mPermGroupsList, displayList, which);
