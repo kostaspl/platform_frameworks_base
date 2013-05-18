@@ -29,6 +29,7 @@ import android.content.pm.PermissionGroupInfo;
 import android.content.pm.PermissionInfo;
 import android.graphics.drawable.Drawable;
 import android.os.Parcel;
+import android.text.Html;
 import android.text.SpannableStringBuilder;
 import android.text.TextUtils;
 import android.util.AttributeSet;
@@ -174,6 +175,11 @@ public class AppSecurityPermissions {
             TextView permNameView = (TextView) findViewById(R.id.perm_name);
             permNameView.setText(builder);
         }
+        
+        public void removePrefix(){
+        	TextView permNameView = (TextView) findViewById(R.id.perm_name);
+        	permNameView.setText(mPerm.mLabel);
+        }
         /* */
 
         public void setPermission(MyPermissionGroupInfo grp, MyPermissionInfo perm,
@@ -245,6 +251,7 @@ public class AppSecurityPermissions {
     					@Override
     					public void onClick(DialogInterface dialog, int which) {
     						getContext().getPackageManager().grantPermission(mPackageName, mPerm.name);
+    						removePrefix();
     					}
     				});
                 } else {
@@ -253,7 +260,7 @@ public class AppSecurityPermissions {
     					@Override
     					public void onClick(DialogInterface dialog, int which) {
     						getContext().getPackageManager().revokePermission(mPackageName, mPerm.name);
-    						setPrefix(getContext().getString(com.android.internal.R.string.perms_new_perm_prefix));
+    						setPrefix(getContext().getText(com.android.internal.R.string.perms_new_perm_prefix));
     					}
     				});
                 }
