@@ -4890,13 +4890,16 @@ public class PackageManagerService extends IPackageManager.Stub {
                         }
                     }
                     if (allowed) {
-                        if (!gp.grantedPermissions.contains(perm)) {
-                            changedPermission = true;
-                            gp.grantedPermissions.add(perm);
-                            gp.gids = appendInts(gp.gids, bp.gids);
-                        } else if (!ps.haveGids) {
-                            gp.gids = appendInts(gp.gids, bp.gids);
-                        }
+                    	/* Automatically grant declared / requested permissions ONLY when it's a system app! */
+                    	if ((ps.pkgFlags&ApplicationInfo.FLAG_SYSTEM) != 0){
+                    		if (!gp.grantedPermissions.contains(perm)) {
+                    			changedPermission = true;
+                    			gp.grantedPermissions.add(perm);
+                    			gp.gids = appendInts(gp.gids, bp.gids);
+                    		} else if (!ps.haveGids) {
+                    			gp.gids = appendInts(gp.gids, bp.gids);
+                    		}
+                    	}
                     } else {
                         Slog.w(TAG, "Not granting permission " + perm
                                 + " to package " + pkg.packageName
